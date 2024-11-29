@@ -5,14 +5,14 @@ from setuptools import setup
 with open('README.md') as f:
     long_description = f.read()
 
-setup(name="pipelinewise-target-s3-csv",
+setup(name="target-s3-parquet",
       version="0.0.1",
       python_requires=">=3.7.0, <3.11",
-      description="Singer.io target for writing CSV files and upload to S3 - PipelineWise compatible",
+      description="Singer.io target for writing parquet files and upload to S3 - PipelineWise compatible",
       long_description=long_description,
       long_description_content_type='text/markdown',
       author="Wise",
-      url='https://github.com/transferwise/pipelinewise-target-s3-csv',
+      url='https://github.com/codeG12/target-s3-parquet',
       classifiers=[
           'License :: OSI Approved :: Apache Software License',
           'Programming Language :: Python :: 3 :: Only',
@@ -26,7 +26,7 @@ setup(name="pipelinewise-target-s3-csv",
           'pipelinewise-singer-python==1.*',
           'inflection==0.5.1',
           'boto3==1.17.39',
-          'pandas==1.3.0'
+          'pandas==1.3.0',
           'pyarrow==11.0.0'
       ],
       extras_require={
@@ -38,7 +38,7 @@ setup(name="pipelinewise-target-s3-csv",
       },
       entry_points="""
           [console_scripts]
-          target-s3-csv=target_s3_parquet:main
+          target-s3-parquet=target_s3_parquet:main
        """,
       packages=["target_s3_parquet"],
       package_data={},
