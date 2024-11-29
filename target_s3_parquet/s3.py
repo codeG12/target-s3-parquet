@@ -52,80 +52,81 @@ def create_client(config):
         s3 = aws_session.client('s3')
     return s3
 
-
-# pylint: disable=too-many-arguments
-@retry_pattern()
-def upload_file(filename, s3_client, bucket, s3_key,
-                encryption_type=None, encryption_key=None):
-
-    if encryption_type is None or encryption_type.lower() == "none":
-        # No encryption config (defaults to settings on the bucket):
-        encryption_desc = ""
-        encryption_args = None
-    else:
-        if encryption_type.lower() == "kms":
-            encryption_args = {"ServerSideEncryption": "aws:kms"}
-            if encryption_key:
-                encryption_desc = (
-                    " using KMS encryption key ID '{}'"
-                    .format(encryption_key)
-                )
-                encryption_args["SSEKMSKeyId"] = encryption_key
-            else:
-                encryption_desc = " using default KMS encryption"
-        else:
-            raise NotImplementedError(
-                "Encryption type '{}' is not supported. "
-                "Expected: 'none' or 'KMS'"
-                .format(encryption_type)
-            )
-    LOGGER.info(
-        "Uploading {} to bucket {} at {}{}"
-        .format(filename, bucket, s3_key, encryption_desc)
-    )
-    LOGGER.info("File is converted into parquet file")
-    s3_client.upload_file(filename, bucket, s3_key, ExtraArgs=encryption_args)
-
-
-def upload_files(filenames: Iterator[Dict],
-                 s3_client: BaseClient,
-                 s3_bucket: str,
-                 compression: Optional[str],
-                 encryption_type: Optional[str],
-                 encryption_key: Optional[str]):
-    """
-    Uploads given local files to s3
-    Compress if necessary
-    """
-    for file in filenames:
-        filename, target_key = file['filename'], file['target_key']
-        compressed_file = None
-
-        if compression is not None and compression.lower() != "none":
-            if compression == "gzip":
-                compressed_file = f"{filename}.gz"
-                target_key = f'{target_key}.gz'
-
-                with open(filename, 'rb') as f_in:
-                    with gzip.open(compressed_file, 'wb') as f_out:
-                        LOGGER.info(f"Compressing file as '%s'", compressed_file)
-                        shutil.copyfileobj(f_in, f_out)
-
-            else:
-                raise NotImplementedError(
-                    "Compression type '{}' is not supported. Expected: 'none' or 'gzip'".format(compression)
-                )
-
-        upload_file(compressed_file or filename,
-                    s3_client,
-                    s3_bucket,
-                    target_key,
-                    encryption_type=encryption_type,
-                    encryption_key=encryption_key
-                    )
-
-        # Remove the local file(s)
-        if os.path.exists(filename):
-            os.remove(filename)
-            if compressed_file:
-                os.remove(compressed_file)
+#
+# # pylint: disable=too-many-arguments
+# @retry_pattern()
+# def upload_file(filename, s3_client, bucket, s3_key,
+#                 encryption_type=None, encryption_key=None):
+#
+#     if encryption_type is None or encryption_type.lower() == "none":
+#         # No encryption config (defaults to settings on the bucket):
+#         encryption_desc = ""
+#         encryption_args = None
+#     else:
+#         if encryption_type.lower() == "kms":
+#             encryption_args = {"ServerSideEncryption": "aws:kms"}
+#             if encryption_key:
+#                 encryption_desc = (
+#                     " using KMS encryption key ID '{}'"
+#                     .format(encryption_key)
+#                 )
+#                 encryption_args["SSEKMSKeyId"] = encryption_key
+#             else:
+#                 encryption_desc = " using default KMS encryption"
+#         else:
+#             raise NotImplementedError(
+#                 "Encryption type '{}' is not supported. "
+#                 "Expected: 'none' or 'KMS'"
+#                 .format(encryption_type)
+#             )
+#     LOGGER.info(
+#         "Uploading {} to bucket {} at {}{}"
+#         .format(filename, bucket, s3_key, encryption_desc)
+#     )
+#     LOGGER.info("File is converted into parquet file")
+#     s3_client.upload_file(filename, bucket, s3_key, ExtraArgs=encryption_args)
+#
+#
+# def upload_files(filenames: Iterator[Dict],
+#                  s3_client: BaseClient,
+#                  s3_bucket: str,
+#                  s3_path:str,
+#                  compression: Optional[str],
+#                  encryption_type: Optional[str],
+#                  encryption_key: Optional[str]):
+#     """
+#     Uploads given local files to s3
+#     Compress if necessary
+#     """
+#     for file in filenames:
+#         LOGGER.info(file)
+#         filename = file['filename']
+#         compressed_file = None
+#
+#         if compression is not None and compression.lower() != "none":
+#             if compression == "gzip":
+#                 compressed_file = f"{filename}.gz"
+#
+#
+#                 with open(filename, 'rb') as f_in:
+#                     with gzip.open(compressed_file, 'wb') as f_out:
+#                         LOGGER.info(f"Compressing file as '%s'", compressed_file)
+#
+#             else:
+#                 raise NotImplementedError(
+#                     "Compression type '{}' is not supported. Expected: 'none' or 'gzip'".format(compression)
+#                 )
+#
+#         upload_file(compressed_file or filename,
+#                     s3_client,
+#                     s3_bucket,
+#                     s3_path,
+#                     encryption_type=encryption_type,
+#                     encryption_key=encryption_key
+#                     )
+#
+#         # Remove the local file(s)
+#         if os.path.exists(filename):
+#             os.remove(filename)
+#             if compressed_file:
+#                 os.remove(compressed_file)
